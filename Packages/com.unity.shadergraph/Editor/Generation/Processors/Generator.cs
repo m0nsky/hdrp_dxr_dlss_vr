@@ -558,6 +558,13 @@ namespace UnityEditor.ShaderGraph
                     }
                 }
 
+                // Enable this to turn on shader debugging
+                bool debugShader = false;
+                if (debugShader)
+                {
+                    passPragmaBuilder.AppendLine("#pragma enable_d3d11_debug_symbols");
+                }
+
                 string command = GenerationUtils.GetSpliceCommand(passPragmaBuilder.ToCodeBlock(), "PassPragmas");
                 spliceCommands.Add("PassPragmas", command);
             }
@@ -630,7 +637,9 @@ namespace UnityEditor.ShaderGraph
                     }
                     else
                     {
-                        GenerationUtils.GenerateInterpolatorFunctions(shaderStruct, activeFields.baseInstance, out interpolatorBuilder);
+                        ShaderStringBuilder localInterpolatorBuilder; // GenerateInterpolatorFunctions do the allocation
+                        GenerationUtils.GenerateInterpolatorFunctions(shaderStruct, activeFields.baseInstance, out localInterpolatorBuilder);
+                        interpolatorBuilder.Concat(localInterpolatorBuilder);
                     }
                     //using interp index from functions, generate packed struct descriptor
                     GenerationUtils.GeneratePackedStruct(shaderStruct, activeFields, out packStruct);

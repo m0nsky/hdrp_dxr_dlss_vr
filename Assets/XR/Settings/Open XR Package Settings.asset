@@ -153,19 +153,19 @@ MonoBehaviour:
   m_Name: Standalone
   m_EditorClassIdentifier: 
   features:
+  - {fileID: -6141465505004476564}
   - {fileID: -3274508582104880447}
   - {fileID: 1488317203593433526}
   - {fileID: 1854385272202552687}
   - {fileID: 5923153419884516310}
   - {fileID: -910659131461482981}
   - {fileID: 4449120149493520233}
-  - {fileID: -6141465505004476564}
-  - {fileID: 5100353229693417590}
   - {fileID: -6345899049191716337}
-  - {fileID: 6286684749721303117}
   - {fileID: 2766009648884308994}
+  - {fileID: 6286684749721303117}
+  - {fileID: 5100353229693417590}
   m_renderMode: 1
-  m_depthSubmissionMode: 1
+  m_depthSubmissionMode: 0
 --- !u!114 &-8244699679358228704
 MonoBehaviour:
   m_ObjectHideFlags: 0
