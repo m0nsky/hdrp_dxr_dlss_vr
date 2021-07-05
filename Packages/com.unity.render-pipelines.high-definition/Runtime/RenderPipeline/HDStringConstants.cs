@@ -594,6 +594,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly int _ValidationBufferRW              = Shader.PropertyToID("_ValidationBufferRW");
         public static readonly int _HistoryDepthTexture             = Shader.PropertyToID("_HistoryDepthTexture");
         public static readonly int _HistoryNormalTexture            = Shader.PropertyToID("_HistoryNormalTexture");
+        public static readonly int _HistorySampleCountTexture       = Shader.PropertyToID("_HistorySampleCountTexture");
         public static readonly int _RaytracingDenoiseRadius         = Shader.PropertyToID("_RaytracingDenoiseRadius");
         public static readonly int _DenoiserFilterRadius            = Shader.PropertyToID("_DenoiserFilterRadius");
         public static readonly int _NormalHistoryCriterion          = Shader.PropertyToID("_NormalHistoryCriterion");
@@ -619,6 +620,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly int _HistoryBufferSize               = Shader.PropertyToID("_HistoryBufferSize");
         public static readonly int _CurrentEffectResolution         = Shader.PropertyToID("_CurrentEffectResolution");
         public static readonly int _SampleCountTextureRW            = Shader.PropertyToID("_SampleCountTextureRW");
+        public static readonly int _HistorySampleCountTextureRW     = Shader.PropertyToID("_HistorySampleCountTextureRW");
         public static readonly int _AffectSmoothSurfaces            = Shader.PropertyToID("_AffectSmoothSurfaces");
         public static readonly int _ObjectMotionStencilBit          = Shader.PropertyToID("_ObjectMotionStencilBit");
 
@@ -720,6 +722,8 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly int _RayBinSizeResult                = Shader.PropertyToID("_RayBinSizeResult");
         public static readonly int _RayBinTileCountX                = Shader.PropertyToID("_RayBinTileCountX");
         public static readonly int _BufferSizeX                     = Shader.PropertyToID("_BufferSizeX");
+        public static readonly int _RayBinViewOffset                = Shader.PropertyToID("_RayBinViewOffset");
+        public static readonly int _RayBinTileViewOffset            = Shader.PropertyToID("_RayBinTileViewOffset");
 
         // Sub Surface
         public static readonly int _ThroughputTextureRW             = Shader.PropertyToID("_ThroughputTextureRW");

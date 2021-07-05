@@ -175,7 +175,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.management": {
-      "version": "4.0.5",
+      "version": "4.0.6",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -188,7 +188,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.openxr": {
-      "version": "1.2.2",
+      "version": "1.2.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {

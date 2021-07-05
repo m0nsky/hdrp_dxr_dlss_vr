@@ -1,15 +1,27 @@
 float3 SampleSpecularBRDF(BSDFData bsdfData, float2 theSample, float3 viewWS)
 {
-    float roughness = bsdfData.roughnessAT;
+    float roughness;
     float3x3 localToWorld;
-    if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_STACK_LIT_ANISOTROPY))
+
+    if (IsVLayeredEnabled(bsdfData) && (bsdfData.coatMask > 0))
     {
-        localToWorld = float3x3(bsdfData.tangentWS, bsdfData.bitangentWS, bsdfData.normalWS);
+        roughness = bsdfData.coatRoughness;
+        localToWorld = GetLocalFrame(bsdfData.normalWS);
     }
     else
     {
-        localToWorld = GetLocalFrame(bsdfData.normalWS);
+        roughness = PerceptualRoughnessToRoughness(lerp(bsdfData.perceptualRoughnessA, bsdfData.perceptualRoughnessB, bsdfData.lobeMix));
+
+        if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_STACK_LIT_ANISOTROPY))
+        {
+            localToWorld = float3x3(bsdfData.tangentWS, bsdfData.bitangentWS, bsdfData.normalWS);
+        }
+        else
+        {
+            localToWorld = GetLocalFrame(bsdfData.normalWS);
+        }
     }
+
     float NdotL, NdotH, VdotH;
     float3 sampleDir;
     SampleGGXDir(theSample, viewWS, localToWorld, roughness, sampleDir, NdotL, NdotH, VdotH);
@@ -21,20 +33,28 @@ float3 SampleSpecularBRDF(BSDFData bsdfData, float2 theSample, float3 viewWS)
 IndirectLighting EvaluateBSDF_RaytracedReflection(LightLoopContext lightLoopContext,
                                                     BSDFData bsdfData,
                                                     PreLightData preLightData,
-                                                    float3 reflection)
+                                                    float3 reflection,
+                                                    inout float reflectionHierarchyWeight,
+                                                    inout LightHierarchyData lightHierarchyData)
 {
     IndirectLighting lighting;
     ZERO_INITIALIZE(IndirectLighting, lighting);
 
     float3 reflectanceFactor = (float3)0.0;
 
-    if (IsVLayeredEnabled(bsdfData))
+    if (IsVLayeredEnabled(bsdfData) && (bsdfData.coatMask > 0))
     {
         reflectanceFactor = preLightData.specularFGD[COAT_LOBE_IDX];
-        reflectanceFactor *= preLightData.hemiSpecularOcclusion[COAT_LOBE_IDX];
         // TODOENERGY: If vlayered, should be done in ComputeAdding with FGD formulation for non dirac lights.
         // Incorrect, but for now:
         reflectanceFactor *= preLightData.energyCompensationFactor[COAT_LOBE_IDX];
+        //float coatFGD = reflectanceFactor.r;
+        reflectanceFactor *= preLightData.hemiSpecularOcclusion[COAT_LOBE_IDX];
+
+        lightHierarchyData.lobeReflectionWeight[COAT_LOBE_IDX] = reflectionHierarchyWeight;
+        // Instead of reflectionHierarchyWeight *= coatFGD,
+        // we return min_of_all(lobeReflectionWeight) == 0, as we didn't provide any light for the bottom layer lobes:
+        reflectionHierarchyWeight = 0;
     }
     else
     {
@@ -47,6 +67,9 @@ IndirectLighting EvaluateBSDF_RaytracedReflection(LightLoopContext lightLoopCont
             lobeFactor *= preLightData.energyCompensationFactor[i];
             reflectanceFactor += lobeFactor;
         }
+
+        lightHierarchyData.lobeReflectionWeight[BASE_LOBEA_IDX] =
+        lightHierarchyData.lobeReflectionWeight[BASE_LOBEB_IDX] = reflectionHierarchyWeight;
     }
 
     lighting.specularReflected = reflection.rgb * reflectanceFactor;
@@ -74,11 +97,21 @@ void FitToStandardLit( BSDFData bsdfData
                         , uint2 positionSS
                         , out StandardBSDFData outStandardlit)
 {
-    outStandardlit.baseColor = bsdfData.diffuseColor;
-    outStandardlit.specularOcclusion = bsdfData.specularOcclusionCustomInput;
+    // TODO: There's space for doing better here:
+
+    // bool hasCoatNormal = HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_STACK_LIT_COAT)
+    //                     && HasFlag(surfaceData.materialFeatures, MATERIALFEATUREFLAGS_STACK_LIT_COAT_NORMAL_MAP);
+    // outStandardlit.normalWS = hasCoatNormal ? surfaceData.coatNormalWS : surfaceData.normalWS;
+    // Using coatnormal not necessarily better here depends on what each are vs geometric normal and the coat strength
+    // vs base strength. Could do something with that and specular albedos...
     outStandardlit.normalWS = bsdfData.normalWS;
-    outStandardlit.perceptualRoughness = bsdfData.perceptualRoughnessA;
+
+    // StandardLit expects diffuse color in baseColor:
+    outStandardlit.baseColor = bsdfData.diffuseColor;
     outStandardlit.fresnel0 = bsdfData.fresnel0;
+    outStandardlit.specularOcclusion = 1; // TODO
+
+    outStandardlit.perceptualRoughness = lerp(bsdfData.perceptualRoughnessA, bsdfData.perceptualRoughnessB, bsdfData.lobeMix);
     outStandardlit.coatMask = bsdfData.coatMask;
     outStandardlit.emissiveAndBaked = builtinData.bakeDiffuseLighting * bsdfData.ambientOcclusion + builtinData.emissiveColor;
     outStandardlit.isUnlit = 0;
